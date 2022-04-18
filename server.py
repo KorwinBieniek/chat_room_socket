@@ -14,16 +14,20 @@ clients = set()
 clients_lock = threading.Lock()
 
 client_usernames = []
+
+
 def handle_client(conn, addr):
     client_username = addr
     print(f"[NEW CONNECTION] {client_username} Connected")
-
 
     try:
         connected = True
         while connected:
             msg = conn.recv(1024).decode(FORMAT)
-
+            if str(msg) == '!who':
+                users = '\n'.join(client_usernames)
+                for c in clients:
+                    c.sendall(f"List of current users:\n{users}".encode(FORMAT))
             if str(msg).startswith('!username'):
                 print(client_usernames)
                 if msg[len('!username') + 1:] in client_usernames:
@@ -39,6 +43,7 @@ def handle_client(conn, addr):
                 break
 
             if msg == DISCONNECT_MESSAGE:
+                client_usernames.remove(client_username)
                 connected = False
 
             print(f"[{client_username}]: {msg}")
